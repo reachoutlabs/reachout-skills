@@ -1,0 +1,10 @@
+# Pulse MCP integration for Opencode
+mcp:
+  pulse:
+    command: npx
+    args:
+      - "-y"
+      - "@reachoutlabs/pulse-mcp"
+    env:
+      PULSE_API_KEY: "${PULSE_API_KEY}"
+      PULSE_BASE_URL: "${PULSE_BASE_URL:-https://api.usereachout.com}"

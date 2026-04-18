@@ -1,0 +1,27 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Pulse API",
+    "description": "Marketing automation platform — data analysis, contact management, email campaigns, and analytics",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.usereachout.com"
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Pulse tenant API key"
+      }
+    }
+  }
+}

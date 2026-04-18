@@ -1,0 +1,10 @@
+{
+  "name": "@reachoutlabs/pulse-skills",
+  "version": "0.1.0",
+  "description": "Installable agent skills for Pulse — marketing automation for the AI-age",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reachoutlabs/pulse-skills.git"
+  }
+}

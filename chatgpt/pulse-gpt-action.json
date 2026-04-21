@@ -2,25 +2,840 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Pulse API",
-    "description": "Marketing automation platform — data analysis, contact management, email campaigns, and analytics",
-    "version": "0.1.0"
+    "description": "Marketing automation platform — contacts, campaigns, segments, analytics, and data sources. All endpoints are scoped to the authenticated organization.",
+    "version": "1.0.0"
   },
   "servers": [
-    {
-      "url": "https://api.usereachout.com"
-    }
+    { "url": "https://api.320px.com" }
   ],
   "security": [
-    {
-      "apiKey": []
-    }
+    { "bearerAuth": [] }
   ],
   "components": {
     "securitySchemes": {
-      "apiKey": {
+      "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Pulse tenant API key"
+        "description": "Pulse tenant API key from https://320px.com/dashboard/settings"
+      }
+    },
+    "schemas": {
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string", "nullable": true },
+          "firstName": { "type": "string", "nullable": true },
+          "lastName": { "type": "string", "nullable": true },
+          "company": { "type": "string", "nullable": true },
+          "role": { "type": "string", "nullable": true },
+          "avatarUrl": { "type": "string", "nullable": true },
+          "customFields": { "type": "object", "nullable": true },
+          "status": { "type": "string", "enum": ["published", "draft", "archived", "suppressed", "toreview"] },
+          "sourceId": { "type": "string", "nullable": true },
+          "mergedIntoId": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Campaign": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "subject": { "type": "string" },
+          "preheader": { "type": "string", "nullable": true },
+          "status": { "type": "string", "enum": ["DRAFT", "SCHEDULED", "SENDING", "SENT", "PAUSED", "ARCHIVED"] },
+          "segmentId": { "type": "string", "nullable": true },
+          "scheduledAt": { "type": "string", "format": "date-time", "nullable": true },
+          "sentAt": { "type": "string", "format": "date-time", "nullable": true },
+          "stats": { "type": "object", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Segment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "rules": { "type": "object" },
+          "isDynamic": { "type": "boolean" },
+          "estimatedSize": { "type": "integer", "nullable": true },
+          "lastComputedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DataSource": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["CSV", "EXCEL", "POSTGRES", "MYSQL", "REST_API", "GRAPHQL_API"] },
+          "config": { "type": "object" },
+          "schema": { "type": "object", "nullable": true },
+          "status": { "type": "string", "enum": ["ACTIVE", "SYNCING", "ERROR", "ARCHIVED"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ContactField": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "type": { "type": "string", "enum": ["text", "number", "date", "bool", "select"] },
+          "options": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "required": { "type": "boolean" },
+          "position": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TrackingClient": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "clientId": { "type": "string" },
+          "allowedOrigins": { "type": "array", "items": { "type": "string" } },
+          "sdkHint": { "type": "string", "nullable": true },
+          "active": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": { "type": "object", "nullable": true }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "summary": "Check API health",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "status": { "type": "string" }, "timestamp": { "type": "string" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/contacts": {
+      "get": {
+        "operationId": "listContacts",
+        "summary": "List contacts",
+        "description": "List contacts with optional filtering by search text and status. Returns paginated results.",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 25 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Free-text search across email, name, company" },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["published", "draft", "archived", "suppressed", "toreview"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of contacts",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Contact" } } } }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createContact",
+        "summary": "Create a contact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "phone": { "type": "string" },
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "company": { "type": "string" },
+                  "role": { "type": "string" },
+                  "customFields": { "type": "object" },
+                  "sourceId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contact created",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Contact" } } } } }
+          },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+
+    "/api/contacts/search": {
+      "post": {
+        "operationId": "searchContacts",
+        "summary": "Advanced contact search",
+        "description": "Search contacts with full DSL: filters, sort, free-text search, and pagination. Filter operators: eq, ne, gt, gte, lt, lte, contains, starts_with, in, is_null. Combine with and/or branches.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "search": { "type": "string", "description": "Free-text search" },
+                  "filters": { "type": "object", "description": "Filter tree: leaf {field, op, value} or branch {and:[...]} / {or:[...]}" },
+                  "sort": { "type": "array", "items": { "type": "object", "properties": { "field": { "type": "string" }, "dir": { "type": "string", "enum": ["asc", "desc"] } } }, "maxItems": 4 },
+                  "page": { "type": "integer", "default": 1 },
+                  "limit": { "type": "integer", "default": 50, "maximum": 200 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Contact" } },
+                    "total": { "type": "integer" },
+                    "page": { "type": "integer" },
+                    "limit": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/contacts/{id}": {
+      "get": {
+        "operationId": "getContact",
+        "summary": "Get a contact",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Contact found", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Contact" } } } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "patch": {
+        "operationId": "updateContact",
+        "summary": "Update a contact",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "phone": { "type": "string", "nullable": true },
+                  "firstName": { "type": "string", "nullable": true },
+                  "lastName": { "type": "string", "nullable": true },
+                  "company": { "type": "string", "nullable": true },
+                  "role": { "type": "string", "nullable": true },
+                  "status": { "type": "string", "enum": ["published", "draft", "archived", "suppressed", "toreview"], "nullable": true },
+                  "customFields": { "type": "object" },
+                  "sourceId": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Contact" } } } } } }
+        }
+      },
+      "delete": {
+        "operationId": "deleteContact",
+        "summary": "Delete a contact",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } } } } }
+        }
+      }
+    },
+
+    "/api/contacts/dedup": {
+      "get": {
+        "operationId": "listDuplicateContacts",
+        "summary": "List duplicate contact groups",
+        "description": "Returns groups of contacts sharing the same email, with full row data for review.",
+        "responses": {
+          "200": {
+            "description": "Duplicate groups",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "groups": { "type": "array" }, "count": { "type": "integer" } } } } } } }
+          }
+        }
+      },
+      "post": {
+        "operationId": "deduplicateContacts",
+        "summary": "Bulk deduplicate contacts",
+        "description": "Apply merge or delete strategy across all duplicate groups automatically.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": { "type": "string", "enum": ["merge", "delete"], "default": "merge" },
+                  "strategy": { "type": "string", "enum": ["newest", "oldest", "most_populated"], "default": "oldest" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Deduplication result" }
+        }
+      }
+    },
+
+    "/api/contact-fields": {
+      "get": {
+        "operationId": "listContactFields",
+        "summary": "List custom contact fields",
+        "responses": {
+          "200": { "description": "Contact field definitions", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/ContactField" } } } } } } }
+        }
+      },
+      "post": {
+        "operationId": "createContactField",
+        "summary": "Create a custom contact field",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["key", "label", "type"],
+                "properties": {
+                  "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "snake_case identifier" },
+                  "label": { "type": "string" },
+                  "type": { "type": "string", "enum": ["text", "number", "date", "bool", "select"] },
+                  "options": { "type": "array", "items": { "type": "string" } },
+                  "required": { "type": "boolean" },
+                  "position": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/ContactField" } } } } } }
+        }
+      }
+    },
+
+    "/api/campaigns": {
+      "get": {
+        "operationId": "listCampaigns",
+        "summary": "List campaigns",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 25 } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["DRAFT", "SCHEDULED", "SENDING", "SENT", "PAUSED", "ARCHIVED"] } }
+        ],
+        "responses": {
+          "200": { "description": "Campaigns list", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Campaign" } } } } } } }
+        }
+      },
+      "post": {
+        "operationId": "createCampaign",
+        "summary": "Create a campaign",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "subject"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "subject": { "type": "string" },
+                  "preheader": { "type": "string" },
+                  "segmentId": { "type": "string", "description": "Segment to target" },
+                  "scheduledAt": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Campaign" } } } } } }
+        }
+      }
+    },
+
+    "/api/campaigns/{id}": {
+      "get": {
+        "operationId": "getCampaign",
+        "summary": "Get a campaign",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Campaign found", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Campaign" } } } } } },
+          "404": { "description": "Not found" }
+        }
+      },
+      "patch": {
+        "operationId": "updateCampaign",
+        "summary": "Update a campaign",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "subject": { "type": "string" },
+                  "preheader": { "type": "string" },
+                  "status": { "type": "string", "enum": ["DRAFT", "SCHEDULED", "SENDING", "SENT", "PAUSED", "ARCHIVED"] },
+                  "segmentId": { "type": "string" },
+                  "scheduledAt": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Campaign" } } } } } }
+        }
+      },
+      "delete": {
+        "operationId": "deleteCampaign",
+        "summary": "Delete a campaign",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } } } } }
+        }
+      }
+    },
+
+    "/api/campaigns/{id}/stats": {
+      "get": {
+        "operationId": "getCampaignStats",
+        "summary": "Get campaign stats",
+        "description": "Delivery and engagement statistics: sent, opened, clicked, bounced, openRate, clickRate.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campaign stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "campaignId": { "type": "string" },
+                        "sent": { "type": "integer" },
+                        "opened": { "type": "integer" },
+                        "clicked": { "type": "integer" },
+                        "bounced": { "type": "integer" },
+                        "openRate": { "type": "number" },
+                        "clickRate": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/campaigns/{id}/send": {
+      "post": {
+        "operationId": "sendCampaign",
+        "summary": "Send a campaign",
+        "description": "Trigger sending a campaign. The campaign must have a segment assigned.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campaign sending triggered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "campaignId": { "type": "string" },
+                        "jobsCreated": { "type": "integer" },
+                        "status": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/segments": {
+      "get": {
+        "operationId": "listSegments",
+        "summary": "List segments",
+        "responses": {
+          "200": { "description": "Segments list", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Segment" } } } } } } }
+        }
+      },
+      "post": {
+        "operationId": "createSegment",
+        "summary": "Create a segment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "rules"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "rules": { "type": "object", "description": "Filter rules JSON" },
+                  "isDynamic": { "type": "boolean", "default": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Segment" } } } } } }
+        }
+      }
+    },
+
+    "/api/segments/{id}": {
+      "get": {
+        "operationId": "getSegment",
+        "summary": "Get a segment",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Segment found", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Segment" } } } } } },
+          "404": { "description": "Not found" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSegment",
+        "summary": "Delete a segment",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } } } } }
+        }
+      }
+    },
+
+    "/api/segments/{id}/estimate": {
+      "post": {
+        "operationId": "estimateSegment",
+        "summary": "Estimate segment size",
+        "description": "Compute the estimated number of contacts matching this segment's rules.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Estimate result", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "segmentId": { "type": "string" }, "estimatedSize": { "type": "integer" } } } } } } } }
+        }
+      }
+    },
+
+    "/api/segments/{id}/contacts": {
+      "get": {
+        "operationId": "previewSegmentContacts",
+        "summary": "Preview contacts in a segment",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Contacts preview", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Contact" } } } } } } }
+        }
+      }
+    },
+
+    "/api/data-sources": {
+      "get": {
+        "operationId": "listDataSources",
+        "summary": "List data sources",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 25 } },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["CSV", "EXCEL", "POSTGRES", "MYSQL", "REST_API", "GRAPHQL_API"] } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["ACTIVE", "SYNCING", "ERROR", "ARCHIVED"] } }
+        ],
+        "responses": {
+          "200": { "description": "Data sources", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/DataSource" } } } } } } }
+        }
+      },
+      "post": {
+        "operationId": "createDataSource",
+        "summary": "Create a data source",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "type", "config"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string", "enum": ["CSV", "EXCEL", "POSTGRES", "MYSQL", "REST_API", "GRAPHQL_API"] },
+                  "config": { "type": "object", "description": "Connection configuration (type-specific)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/DataSource" } } } } } }
+        }
+      }
+    },
+
+    "/api/data-sources/{id}": {
+      "get": {
+        "operationId": "getDataSource",
+        "summary": "Get a data source",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Data source found", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/DataSource" } } } } } },
+          "404": { "description": "Not found" }
+        }
+      },
+      "patch": {
+        "operationId": "updateDataSource",
+        "summary": "Update a data source",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "config": { "type": "object" },
+                  "status": { "type": "string", "enum": ["ACTIVE", "SYNCING", "ERROR", "ARCHIVED"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/DataSource" } } } } } }
+        }
+      },
+      "delete": {
+        "operationId": "deleteDataSource",
+        "summary": "Delete a data source",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } } } } }
+        }
+      }
+    },
+
+    "/api/analytics/overview": {
+      "get": {
+        "operationId": "getAnalyticsOverview",
+        "summary": "Get visitor analytics overview",
+        "description": "Aggregate visitor metrics: unique visitors, sessions, pageviews, bounce rate, avg session duration. Includes daily time series.",
+        "parameters": [
+          { "name": "range", "in": "query", "schema": { "type": "string", "enum": ["24h", "7d", "30d", "90d"], "default": "7d" },
+          { "name": "clientId", "in": "query", "schema": { "type": "string" }, "description": "Scope to a specific tracking client" }
+        ],
+        "responses": {
+          "200": { "description": "Analytics overview" }
+        }
+      }
+    },
+
+    "/api/analytics/pages": {
+      "get": {
+        "operationId": "getTopPages",
+        "summary": "Get top pages",
+        "parameters": [
+          { "name": "range", "in": "query", "schema": { "type": "string", "default": "7d" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "clientId", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Top pages" }
+        }
+      }
+    },
+
+    "/api/analytics/referrers": {
+      "get": {
+        "operationId": "getTopReferrers",
+        "summary": "Get top referrers",
+        "parameters": [
+          { "name": "range", "in": "query", "schema": { "type": "string", "default": "7d" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "clientId", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Top referrers" }
+        }
+      }
+    },
+
+    "/api/analytics/campaigns/{id}/performance": {
+      "get": {
+        "operationId": "getCampaignPerformance",
+        "summary": "Get campaign performance",
+        "description": "Email event rollup: sent, opened, clicked, bounced, openRate, clickRate.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Campaign performance" }
+        }
+      }
+    },
+
+    "/api/tracking-clients": {
+      "get": {
+        "operationId": "listTrackingClients",
+        "summary": "List tracking clients",
+        "responses": {
+          "200": { "description": "Tracking clients", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/TrackingClient" } } } } } } }
+        }
+      },
+      "post": {
+        "operationId": "createTrackingClient",
+        "summary": "Create a tracking client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "allowedOrigins": { "type": "array", "items": { "type": "string", "format": "uri" } },
+                  "sdkHint": { "type": "string" },
+                  "issueSecret": { "type": "boolean", "description": "Issue a client secret for server-side SDKs" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created" }
+        }
+      }
+    },
+
+    "/api/tracking-clients/{id}": {
+      "delete": {
+        "operationId": "deleteTrackingClient",
+        "summary": "Delete a tracking client",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+
+    "/api/dashboard/stats": {
+      "get": {
+        "operationId": "getDashboardStats",
+        "summary": "Get dashboard overview stats",
+        "description": "Aggregate stats for the Studio overview: campaign counts, contact totals, segment count, MCP calls, email events, recent campaigns with performance, and recent activity feed.",
+        "responses": {
+          "200": { "description": "Dashboard stats" }
+        }
+      }
+    },
+
+    "/api/billing/usage": {
+      "get": {
+        "operationId": "getBillingUsage",
+        "summary": "Get billing usage",
+        "description": "Current period usage: emails sent, data fetch requests.",
+        "responses": {
+          "200": { "description": "Usage data" }
+        }
+      }
+    },
+
+    "/api/billing/seats": {
+      "get": {
+        "operationId": "listTeamSeats",
+        "summary": "List team members",
+        "responses": {
+          "200": { "description": "Team members" }
+        }
       }
     }
   }

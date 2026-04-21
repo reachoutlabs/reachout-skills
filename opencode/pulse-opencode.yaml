@@ -1,10 +1,18 @@
 # Pulse MCP integration for Opencode
+#
+# Setup:
+#   1. Copy this file and pulse-mcp-proxy.js to your opencode skills directory
+#   2. Set PULSE_API_KEY in your environment
+#   3. Add the skill path to your opencode config
+#
+# The proxy script bridges Opencode's stdio MCP client to Pulse's remote
+# HTTP endpoint at https://api.320px.com/mcp.
+
 mcp:
   pulse:
-    command: npx
+    command: node
     args:
-      - "-y"
-      - "@reachoutlabs/pulse-mcp"
+      - "{{skill_dir}}/pulse-mcp-proxy.js"
     env:
       PULSE_API_KEY: "${PULSE_API_KEY}"
-      PULSE_BASE_URL: "${PULSE_BASE_URL:-https://api.usereachout.com}"
+      PULSE_BASE_URL: "${PULSE_BASE_URL:-https://api.320px.com}"

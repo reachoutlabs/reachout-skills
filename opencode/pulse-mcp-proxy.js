@@ -3,17 +3,17 @@
  * Pulse MCP Proxy for Opencode
  *
  * This script bridges Opencode's stdio-based MCP client to Pulse's
- * remote HTTP MCP endpoint at https://api.320px.com/mcp.
+ * remote HTTP MCP endpoint at https://reachout-pulse-api.usereachout.com/mcp.
  *
  * Usage:
  *   PULSE_API_KEY=xxx node pulse-mcp-proxy.js
  *
  * Environment:
- *   PULSE_API_KEY    - Required. Your Pulse tenant API key.
- *   PULSE_BASE_URL   - Optional. Default: https://api.320px.com
+ *   PULSE_API_KEY    - Required. Your ReachOut tenant API key.
+ *   PULSE_BASE_URL   - Optional. Default: https://reachout-pulse-api.usereachout.com
  */
 
-const BASE = process.env.PULSE_BASE_URL || 'https://api.320px.com';
+const BASE = process.env.PULSE_BASE_URL || 'https://reachout-pulse-api.usereachout.com';
 const API_KEY = process.env.PULSE_API_KEY;
 
 if (!API_KEY) {

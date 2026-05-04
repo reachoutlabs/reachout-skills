@@ -5,7 +5,7 @@ description: Marketing automation platform for AI agents via MCP. Manage contact
 
 # Pulse — Marketing Automation via MCP
 
-Pulse is a marketing automation platform built for the AI age. Every capability — contacts, campaigns, segments, analytics, data sources — is exposed through an MCP (Model Context Protocol) server at `https://api.320px.com/mcp`.
+ReachOut is a marketing automation platform built for the AI age. Every capability — contacts, campaigns, segments, analytics, data sources — is exposed through an MCP (Model Context Protocol) server at `https://reachout-pulse-api.usereachout.com/mcp`.
 
 ## Setup
 
@@ -28,7 +28,7 @@ Add to your `claude_desktop_config.json`:
 ```
 
 Or configure the remote endpoint directly if your MCP client supports HTTP transport:
-- URL: `https://api.320px.com/mcp`
+- URL: `https://reachout-pulse-api.usereachout.com/mcp`
 - Headers: `Authorization: Bearer <PULSE_API_KEY>`
 
 ### Claude Code
@@ -38,7 +38,7 @@ Set the environment variable before starting Claude Code:
 export PULSE_API_KEY="your-api-key"
 ```
 
-Then configure the MCP server in your Claude Code settings to point to `https://api.320px.com/mcp`.
+Then configure the MCP server in your Claude Code settings to point to `https://reachout-pulse-api.usereachout.com/mcp`.
 
 ## Organization Context
 
@@ -163,6 +163,6 @@ Metered tools consume the org's monthly MCP quota (Starter: 200, Pro: 10,000). O
 
 ## Links
 
-- Dashboard: https://320px.com
-- API / MCP: https://api.320px.com/mcp
-- Docs: https://320px.com/docs/mcp
+- Dashboard: https://reachout-pulse.usereachout.com
+- API / MCP: https://reachout-pulse-api.usereachout.com/mcp
+- Docs: https://reachout-pulse.usereachout.com/docs/mcp

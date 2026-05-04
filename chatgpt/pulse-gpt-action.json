@@ -6,7 +6,7 @@
     "version": "1.0.0"
   },
   "servers": [
-    { "url": "https://api.320px.com" }
+    { "url": "https://reachout-pulse-api.usereachout.com" }
   ],
   "security": [
     { "bearerAuth": [] }
@@ -16,7 +16,7 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Pulse tenant API key from https://320px.com/dashboard/settings"
+        "description": "ReachOut tenant API key from https://reachout-pulse.usereachout.com/dashboard/settings"
       }
     },
     "schemas": {

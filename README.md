@@ -17,7 +17,7 @@ These skills allow AI coding agents (Claude, ChatGPT, Opencode, Pi) to interact 
 
 All skills require a **Pulse API key**.
 
-1. Sign up at https://320px.com
+1. Sign up at https://reachout-pulse.usereachout.com
 2. Go to **Dashboard → Settings**
 3. Copy your API key
 
@@ -35,7 +35,7 @@ Configure the Pulse MCP server in your Pi settings:
 {
   "mcpServers": {
     "pulse": {
-      "url": "https://api.320px.com/mcp",
+      "url": "https://reachout-pulse-api.usereachout.com/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
       }
@@ -56,7 +56,7 @@ For Claude Desktop, add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "pulse": {
-      "url": "https://api.320px.com/mcp",
+      "url": "https://reachout-pulse-api.usereachout.com/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
       }
@@ -72,7 +72,7 @@ For Claude Desktop, add to `claude_desktop_config.json`:
 3. Import `chatgpt/pulse-gpt-action.json`
 4. Set authentication type to **API Key** → **Bearer**
 5. Enter your Pulse API key
-6. Set privacy policy URL to `https://320px.com/privacy`
+6. Set privacy policy URL to `https://reachout-pulse.usereachout.com/privacy`
 
 The action exposes REST endpoints for contacts, campaigns, segments, analytics, data sources, and tracking clients.
 
@@ -124,7 +124,7 @@ The `pulse-mcp-proxy.js` script bridges Opencode's stdio MCP client to Pulse's r
 
 ## MCP Endpoint
 
-- **URL:** `https://api.320px.com/mcp`
+- **URL:** `https://reachout-pulse-api.usereachout.com/mcp`
 - **Protocol:** JSON-RPC 2.0 over HTTP + SSE
 - **Auth:** `Authorization: Bearer <api_key>`
 - **Version:** 1.3.0

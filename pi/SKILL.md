@@ -5,18 +5,18 @@ description: Marketing automation platform for AI agents via MCP. Manage contact
 
 # Pulse — Marketing Automation via MCP
 
-Pulse is a marketing automation platform built for the AI age. It exposes every capability through an MCP (Model Context Protocol) server, allowing agents to manage contacts, send campaigns, build segments, and analyze performance — all through structured tool calls.
+ReachOut is a marketing automation platform built for the AI age. It exposes every capability through an MCP (Model Context Protocol) server, allowing agents to manage contacts, send campaigns, build segments, and analyze performance — all through structured tool calls.
 
 ## Setup
 
-1. Get a Pulse API key from your Pulse dashboard at https://320px.com/dashboard/settings
+1. Get a ReachOut API key from your Pulse dashboard at https://reachout-pulse.usereachout.com/dashboard/settings
 2. Configure Pi to connect to the Pulse MCP server by adding this to your Pi settings:
 
 ```json
 {
   "mcpServers": {
     "pulse": {
-      "url": "https://api.320px.com/mcp",
+      "url": "https://reachout-pulse-api.usereachout.com/mcp",
       "headers": {
         "Authorization": "Bearer ${PULSE_API_KEY}"
       }
@@ -97,7 +97,7 @@ Always call `get_current_organization` first if you're unsure which tenant you'r
 
 | Property | Value |
 |----------|-------|
-| Endpoint | `https://api.320px.com/mcp` |
+| Endpoint | `https://reachout-pulse-api.usereachout.com/mcp` |
 | Protocol | JSON-RPC 2.0 over HTTP + SSE |
 | Auth | `Authorization: Bearer <api_key>` |
 | Version | 1.3.0 |

@@ -6,7 +6,7 @@
 #   3. Add the skill path to your opencode config
 #
 # The proxy script bridges Opencode's stdio MCP client to Pulse's remote
-# HTTP endpoint at https://api.320px.com/mcp.
+# HTTP endpoint at https://reachout-pulse-api.usereachout.com/mcp.
 
 mcp:
   pulse:
@@ -15,4 +15,4 @@ mcp:
       - "{{skill_dir}}/pulse-mcp-proxy.js"
     env:
       PULSE_API_KEY: "${PULSE_API_KEY}"
-      PULSE_BASE_URL: "${PULSE_BASE_URL:-https://api.320px.com}"
+      PULSE_BASE_URL: "${PULSE_BASE_URL:-https://reachout-pulse-api.usereachout.com}"

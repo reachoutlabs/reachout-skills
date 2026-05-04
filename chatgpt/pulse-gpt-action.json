@@ -16,7 +16,7 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "description": "ReachOut tenant API key from https://reachout-pulse.usereachout.com/dashboard/settings"
+        "description": "ReachOut tenant API key from https://usereachout.com/studio/settings"
       }
     },
     "schemas": {

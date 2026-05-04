@@ -9,7 +9,7 @@ ReachOut is a marketing automation platform built for the AI age. It exposes eve
 
 ## Setup
 
-1. Get a ReachOut API key from your Pulse dashboard at https://reachout-pulse.usereachout.com/dashboard/settings
+1. Get a ReachOut API key from your Pulse dashboard at https://usereachout.com/studio/settings
 2. Configure Pi to connect to the Pulse MCP server by adding this to your Pi settings:
 
 ```json

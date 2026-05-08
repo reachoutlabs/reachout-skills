@@ -1,6 +1,6 @@
 # Pulse Skills
 
-Installable agent skills for [Pulse](https://github.com/reachoutlabs/pulse) — marketing automation for the AI age.
+Installable agent skills for [ReachOut](https://usereachout.com) — marketing automation for the AI age.
 
 These skills allow AI coding agents (Claude, ChatGPT, Opencode, Pi) to interact with a Pulse instance.
 
